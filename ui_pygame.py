@@ -100,13 +100,14 @@ class PygameUI:
         
         return events
     
-    def draw_frame(self, frame: np.ndarray, position: Tuple[int, int] = (10, 10)):
+    def draw_frame(self, frame: np.ndarray, position: Tuple[int, int] = (10, 10), scale: float = 0.5):
         """
         Draw a camera frame on the screen.
         
         Args:
             frame: OpenCV frame (BGR format)
             position: (x, y) position to draw the frame
+            scale: Scaling factor for the frame
         """
         if frame is None or not self.is_initialized:
             return
@@ -114,6 +115,12 @@ class PygameUI:
         frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         frame_rgb = np.rot90(frame_rgb)
         frame_rgb = np.flipud(frame_rgb)
+        
+        # Scale the frame to fit the UI better
+        height, width = frame_rgb.shape[:2]
+        new_width = int(width * scale)
+        new_height = int(height * scale)
+        frame_rgb = cv2.resize(frame_rgb, (new_width, new_height), interpolation=cv2.INTER_AREA)
         
         frame_surface = pygame.surfarray.make_surface(frame_rgb)
         self.screen.blit(frame_surface, position)
