@@ -83,7 +83,10 @@ class DataLogger:
             self.start_session()
         
         timestamp = self.get_timestamp()
-        filename = f"{self.session_id}_{self.capture_count:04d}_{timestamp}.jpg"
+        if label:
+            filename = f"{self.session_id}_{self.capture_count:04d}_{timestamp}_{label}.jpg"
+        else:
+            filename = f"{self.session_id}_{self.capture_count:04d}_{timestamp}.jpg"
         filepath = os.path.join(self.images_path, filename)
         
         try:
@@ -152,7 +155,7 @@ class DataLogger:
             return False
     
     def save_capture(self, frame: np.ndarray, label_data: Optional[Dict[str, Any]] = None,
-                    sensor_data: Optional[Dict[str, Any]] = None) -> bool:
+                    sensor_data: Optional[Dict[str, Any]] = None, camera_role: str = "unknown") -> bool:
         """
         Save a complete capture including image, label, and metadata.
         
@@ -160,11 +163,12 @@ class DataLogger:
             frame: Image frame to save
             label_data: Optional label/annotation data
             sensor_data: Optional sensor readings
+            camera_role: Role of the camera (front, left, right)
         
         Returns:
             bool: True if all data saved successfully
         """
-        filename = self.save_image(frame)
+        filename = self.save_image(frame, label=camera_role)
         
         if filename is None:
             return False
@@ -175,7 +179,7 @@ class DataLogger:
             success = success and self.save_label(filename, label_data)
         
         if sensor_data:
-            metadata = {'sensor_data': sensor_data}
+            metadata = {'sensor_data': sensor_data, 'camera_role': camera_role}
             success = success and self.save_metadata(filename, metadata)
         
         return success
