@@ -78,7 +78,9 @@ class PygameUI:
             'key_pressed': None,
             'capture': False,
             'save': False,
-            'escape': False
+            'escape': False,
+            'toggle_recording': False,
+            'switch_view': None
         }
         
         for event in pygame.event.get():
@@ -97,6 +99,17 @@ class PygameUI:
                 
                 elif event.key == pygame.K_s:
                     events['save'] = True
+                
+                elif event.key == pygame.K_r:
+                    events['toggle_recording'] = True
+                
+                elif event.key in (pygame.K_1, pygame.K_2, pygame.K_3):
+                    if event.key == pygame.K_1:
+                        events['switch_view'] = '1'
+                    elif event.key == pygame.K_2:
+                        events['switch_view'] = '2'
+                    elif event.key == pygame.K_3:
+                        events['switch_view'] = '3'
         
         return events
     
@@ -199,6 +212,8 @@ class PygameUI:
         instructions = [
             "Controls:",
             "SPACE - Capture Frame",
+            "R - Start/Stop Recording",
+            "1/2/3 - Switch View",
             "S - Save Data",
             "ESC - Quit"
         ]

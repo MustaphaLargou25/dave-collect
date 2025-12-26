@@ -42,6 +42,9 @@ class DataLoggerConfig:
     BASE_PATH = "datasets"
     IMAGE_FORMAT = "jpg"
     IMAGE_QUALITY = 95
+    DATASET_PATH = "dataset"
+    VIEWS = ["front", "left", "right"]
+    STEERING_CSV = "steering.csv"
 
 
 class AppConfig:
