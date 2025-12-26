@@ -26,6 +26,7 @@ class DataCollectionApp:
         self.running = False
         self.current_frame = None
         self.sensor_data = {}
+        self.current_view = "front"
         
         print("=" * 50)
         print("Data Collection System")
@@ -59,6 +60,8 @@ class DataCollectionApp:
         print("\nInitialization complete!")
         print("\nControls:")
         print("  SPACE - Capture and save frame")
+        print("  R     - Toggle recording (Start/Stop)")
+        print("  1/2/3 - Switch view (front/left/right)")
         print("  S     - Save session summary")
         print("  ESC   - Quit application")
         print("-" * 50)
@@ -82,8 +85,14 @@ class DataCollectionApp:
     def handle_capture(self):
         """Handle capture event - save frame with sensor data."""
         if self.current_frame is not None and self.logger:
+            steering_angle = None
+            if self.sensor_data and 'steering' in self.sensor_data:
+                steering_angle = self.sensor_data['steering']
+            
             success = self.logger.save_capture(
                 frame=self.current_frame,
+                view=self.current_view,
+                steering_angle=steering_angle,
                 sensor_data=self.sensor_data if self.sensor_data else None
             )
             
@@ -91,6 +100,23 @@ class DataCollectionApp:
                 print(f"Capture saved! Total: {self.logger.get_capture_count()}")
                 return True
         return False
+    
+    def handle_toggle_recording(self):
+        """Toggle recording on/off."""
+        if self.logger:
+            if self.logger.is_active():
+                self.logger.stop_recording()
+            else:
+                self.logger.start_recording()
+            return self.logger.is_active()
+        return False
+    
+    def handle_switch_view(self, view_key: str):
+        """Switch the current camera view."""
+        view_map = {'1': 'front', '2': 'left', '3': 'right'}
+        if view_key in view_map:
+            self.current_view = view_map[view_key]
+            print(f"Switched to view: {self.current_view}")
     
     def handle_save_summary(self):
         """Handle save session summary event."""
@@ -110,7 +136,7 @@ class DataCollectionApp:
         frame_info_x = 660
         y_offset = 20
         
-        self.ui.draw_panel((frame_info_x - 10, y_offset - 10, 350, 250), title="Session Info")
+        self.ui.draw_panel((frame_info_x - 10, y_offset - 10, 350, 280), title="Session Info")
         y_offset += 50
         
         if self.logger:
@@ -118,7 +144,16 @@ class DataCollectionApp:
             capture_count = self.logger.get_capture_count()
             self.ui.draw_text(f"Session: {session_id[:20]}...", (frame_info_x, y_offset), color='text_secondary')
             y_offset += 30
+            
+            recording_status = "Recording" if self.logger.is_active() else "Paused"
+            recording_color = "success" if self.logger.is_active() else "warning"
+            self.ui.draw_text(f"Status: {recording_status}", (frame_info_x, y_offset), color=recording_color)
+            y_offset += 30
+            
             self.ui.draw_text(f"Captures: {capture_count}", (frame_info_x, y_offset), color='success')
+            y_offset += 30
+            
+            self.ui.draw_text(f"View: {self.current_view}", (frame_info_x, y_offset), color='text_secondary')
             y_offset += 50
         
         camera_status = "Connected" if (self.camera and self.camera.is_initialized) else "Disconnected"
@@ -131,7 +166,7 @@ class DataCollectionApp:
         self.ui.draw_text(f"Arduino: {arduino_status}", (frame_info_x, y_offset), color=arduino_color)
         
         if self.sensor_data:
-            sensor_y = 290
+            sensor_y = 310
             self.ui.draw_panel((frame_info_x - 10, sensor_y, 350, 200), title="Sensor Data")
             self.ui.draw_sensor_data(self.sensor_data, (frame_info_x, sensor_y + 50))
         
@@ -165,6 +200,13 @@ class DataCollectionApp:
                 
                 if events['save']:
                     self.handle_save_summary()
+                
+                if events.get('toggle_recording'):
+                    self.handle_toggle_recording()
+                
+                view_key = events.get('switch_view')
+                if view_key:
+                    self.handle_switch_view(view_key)
                 
                 self.update_camera()
                 self.update_sensors()
