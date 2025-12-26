@@ -11,6 +11,7 @@ from camera_manager import CameraManager
 from arduino_serial import ArduinoSerial
 from ui_pygame import PygameUI
 from data_logger import DataLogger
+from config import AppConfig
 
 
 class DataCollectionApp:
@@ -40,20 +41,40 @@ class DataCollectionApp:
         """
         print("\nInitializing modules...")
         
-        self.camera = CameraManager(camera_index=0, width=640, height=480)
+        self.camera = CameraManager(
+            camera_index=AppConfig.CAMERA.INDEX,
+            width=AppConfig.CAMERA.WIDTH,
+            height=AppConfig.CAMERA.HEIGHT,
+        )
         if not self.camera.initialize():
             print("Warning: Camera initialization failed")
-        
-        self.arduino = ArduinoSerial(baudrate=9600)
+
+        self.arduino = ArduinoSerial(
+            port=AppConfig.ARDUINO.PORT,
+            baudrate=AppConfig.ARDUINO.BAUDRATE,
+            timeout=AppConfig.ARDUINO.TIMEOUT,
+            pot_key=AppConfig.ARDUINO.POTENTIOMETER_KEY,
+            pot_min_raw=AppConfig.ARDUINO.POTENTIOMETER_MIN_RAW,
+            pot_max_raw=AppConfig.ARDUINO.POTENTIOMETER_MAX_RAW,
+            steering_min_deg=AppConfig.ARDUINO.STEERING_MIN_DEG,
+            steering_max_deg=AppConfig.ARDUINO.STEERING_MAX_DEG,
+            steering_invert=AppConfig.ARDUINO.STEERING_INVERT,
+            auto_reconnect=AppConfig.ARDUINO.AUTO_RECONNECT,
+            reconnect_interval_sec=AppConfig.ARDUINO.RECONNECT_INTERVAL_SEC,
+        )
         if not self.arduino.connect():
             print("Warning: Arduino connection failed - continuing without sensor data")
-        
-        self.ui = PygameUI(width=1024, height=768, title="Data Collection System")
+
+        self.ui = PygameUI(
+            width=AppConfig.UI.WINDOW_WIDTH,
+            height=AppConfig.UI.WINDOW_HEIGHT,
+            title=AppConfig.UI.WINDOW_TITLE,
+        )
         if not self.ui.initialize():
             print("Error: UI initialization failed")
             return False
-        
-        self.logger = DataLogger(base_path="datasets")
+
+        self.logger = DataLogger(base_path=AppConfig.DATA_LOGGER.BASE_PATH)
         self.logger.start_session()
         
         print("\nInitialization complete!")
@@ -74,10 +95,14 @@ class DataCollectionApp:
     
     def update_sensors(self):
         """Update sensor data from Arduino."""
-        if self.arduino and self.arduino.is_connected:
-            data = self.arduino.read_sensor_data()
-            if data:
-                self.sensor_data = data
+        if self.arduino:
+            if not self.arduino.is_connected:
+                self.arduino.reconnect_if_needed()
+            
+            if self.arduino.is_connected:
+                data = self.arduino.read_sensor_data()
+                if data:
+                    self.sensor_data = data
     
     def handle_capture(self):
         """Handle capture event - save frame with sensor data."""

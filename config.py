@@ -14,9 +14,21 @@ class CameraConfig:
 
 class ArduinoConfig:
     """Arduino serial communication configuration."""
+
     PORT = None
     BAUDRATE = 9600
-    TIMEOUT = 1.0
+    TIMEOUT = 0.05
+
+    POTENTIOMETER_KEY = "pot"
+    POTENTIOMETER_MIN_RAW = 0
+    POTENTIOMETER_MAX_RAW = 1023
+
+    STEERING_MIN_DEG = -45.0
+    STEERING_MAX_DEG = 45.0
+    STEERING_INVERT = False
+
+    AUTO_RECONNECT = True
+    RECONNECT_INTERVAL_SEC = 2.0
 
 
 class UIConfig:
