@@ -11,6 +11,7 @@ import json
 from datetime import datetime
 from typing import Optional, Dict, Any
 import numpy as np
+import time
 
 
 class DataLogger:
@@ -177,6 +178,54 @@ class DataLogger:
         if sensor_data:
             metadata = {'sensor_data': sensor_data}
             success = success and self.save_metadata(filename, metadata)
+        
+        return success
+    
+    def save_sync_capture(self, frame: np.ndarray, steering_angle: Optional[float], 
+                          frame_timestamp: float, sensor_timestamp: float,
+                          label_data: Optional[Dict[str, Any]] = None) -> bool:
+        """
+        Save a synchronized capture with high-precision timestamps.
+        
+        This method ensures that each frame has a corresponding steering angle value
+        with matched timestamps for precise alignment during data collection.
+        
+        Args:
+            frame: Image frame to save
+            steering_angle: Steering angle value at the time of capture
+            frame_timestamp: High-precision timestamp when frame was captured (microseconds)
+            sensor_timestamp: High-precision timestamp when steering was read (microseconds)
+            label_data: Optional label/annotation data
+        
+        Returns:
+            bool: True if all data saved successfully
+        """
+        filename = self.save_image(frame)
+        
+        if filename is None:
+            return False
+        
+        success = True
+        
+        metadata = {
+            'timestamp': self.get_timestamp(),
+            'session_id': self.session_id,
+            'capture_number': self.capture_count - 1,
+            'synchronization': {
+                'frame_timestamp_us': frame_timestamp,
+                'sensor_timestamp_us': sensor_timestamp,
+                'time_diff_us': abs(frame_timestamp - sensor_timestamp)
+            },
+            'sensor_data': {
+                'steering_angle': steering_angle
+            }
+        }
+        
+        if label_data:
+            metadata['label_data'] = label_data
+            success = success and self.save_label(filename, label_data)
+        
+        success = success and self.save_metadata(filename, metadata)
         
         return success
     

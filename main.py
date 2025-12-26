@@ -26,6 +26,8 @@ class DataCollectionApp:
         self.running = False
         self.current_frame = None
         self.sensor_data = {}
+        self.current_steering: Optional[float] = None
+        self.last_steering_timestamp: float = 0.0
         
         print("=" * 50)
         print("Data Collection System")
@@ -73,22 +75,36 @@ class DataCollectionApp:
                 self.current_frame = frame
     
     def update_sensors(self):
-        """Update sensor data from Arduino."""
+        """Update sensor data from Arduino with high-precision timestamps."""
         if self.arduino and self.arduino.is_connected:
-            data = self.arduino.read_sensor_data()
-            if data:
-                self.sensor_data = data
+            steering, timestamp = self.arduino.read_steering_angle_with_timestamp()
+            if steering is not None:
+                self.current_steering = steering
+                self.last_steering_timestamp = timestamp
+                self.sensor_data = {'steering': steering}
     
     def handle_capture(self):
-        """Handle capture event - save frame with sensor data."""
+        """Handle capture event - save frame with synchronized sensor data and high-precision timestamps."""
         if self.current_frame is not None and self.logger:
-            success = self.logger.save_capture(
+            import time
+            
+            frame_timestamp = time.perf_counter() * 1e6
+            
+            steering = self.current_steering
+            sensor_timestamp = self.last_steering_timestamp
+            
+            if steering is None and self.arduino and self.arduino.is_connected:
+                steering, sensor_timestamp = self.arduino.read_steering_angle_with_timestamp()
+            
+            success = self.logger.save_sync_capture(
                 frame=self.current_frame,
-                sensor_data=self.sensor_data if self.sensor_data else None
+                steering_angle=steering,
+                frame_timestamp=frame_timestamp,
+                sensor_timestamp=sensor_timestamp
             )
             
             if success:
-                print(f"Capture saved! Total: {self.logger.get_capture_count()}")
+                print(f"Capture saved! Steering: {steering} | Time diff: {abs(frame_timestamp - sensor_timestamp):.1f}us | Total: {self.logger.get_capture_count()}")
                 return True
         return False
     
