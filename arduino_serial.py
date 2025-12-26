@@ -6,7 +6,7 @@ Handles serial communication with Arduino devices for sensor data collection.
 
 import serial
 import serial.tools.list_ports
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Tuple
 import time
 
 
@@ -173,6 +173,47 @@ class ArduinoSerial:
         except Exception as e:
             print(f"Error parsing sensor data: {e}")
             return None
+    
+    def read_steering_angle_with_timestamp(self) -> Tuple[Optional[float], float]:
+        """
+        Read steering angle with a high-precision timestamp.
+        
+        Returns:
+            Tuple[Optional[float], float]: (steering_angle, timestamp_us) where 
+                timestamp_us is the read time in microseconds
+        """
+        timestamp_us = time.perf_counter() * 1e6
+        
+        data = self.read_sensor_data()
+        
+        if data is None:
+            return None, timestamp_us
+        
+        steering_angle = data.get('steering') or data.get('steering_angle')
+        
+        if steering_angle is not None:
+            return float(steering_angle), timestamp_us
+        
+        return None, timestamp_us
+    
+    def read_steering_angle(self) -> Optional[float]:
+        """
+        Read steering angle from Arduino.
+        
+        Returns:
+            Optional[float]: Steering angle value or None if not available
+        """
+        data = self.read_sensor_data()
+        
+        if data is None:
+            return None
+        
+        steering_angle = data.get('steering') or data.get('steering_angle')
+        
+        if steering_angle is not None:
+            return float(steering_angle)
+        
+        return None
     
     def flush(self):
         """Flush the input and output buffers."""

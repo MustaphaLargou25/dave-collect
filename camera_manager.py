@@ -6,6 +6,7 @@ Handles camera initialization, configuration, and frame capture operations.
 
 import cv2
 import numpy as np
+import time
 from typing import Optional, Tuple
 
 
@@ -70,6 +71,26 @@ class CameraManager:
             return False, None
         
         return True, frame
+    
+    def capture_frame_with_timestamp(self) -> Tuple[bool, Optional[np.ndarray], float]:
+        """
+        Capture a single frame with a high-precision timestamp.
+        
+        Returns:
+            Tuple[bool, Optional[np.ndarray], float]: (success, frame, timestamp_us) 
+                where timestamp_us is the capture time in microseconds
+        """
+        if not self.is_initialized or self.camera is None:
+            return False, None, 0.0
+        
+        timestamp_us = time.perf_counter() * 1e6
+        ret, frame = self.camera.read()
+        
+        if not ret:
+            print("Error: Failed to capture frame")
+            return False, None, 0.0
+        
+        return True, frame, timestamp_us
     
     def get_frame_dimensions(self) -> Tuple[int, int]:
         """
