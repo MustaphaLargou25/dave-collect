@@ -1,10 +1,70 @@
 # Data Collection System
 
-A modular Python application for collecting synchronized data from cameras and Arduino sensors, with a real-time Pygame interface.
+A modular Python application for collecting synchronized data from cameras and Arduino sensors, with a real-time Pygame interface. Perfect for building datasets, prototyping IoT projects, and running live sensor monitoring systems.
 
-## Architecture Overview
+[![Python 3.7+](https://img.shields.io/badge/Python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Status: Active](https://img.shields.io/badge/Status-Active-brightgreen.svg)]()
 
-The application is built with a modular architecture, with each component having a specific responsibility:
+---
+
+## 📋 Table of Contents
+
+- [Features](#-features)
+- [Architecture](#-architecture)
+- [Quick Start](#-quick-start)
+- [Installation](#-installation)
+- [Usage](#-usage)
+- [Modules](#-modules)
+- [Configuration](#-configuration)
+- [Data Structure](#-data-structure)
+- [API Reference](#-api-reference)
+- [Troubleshooting](#-troubleshooting)
+- [Contributing](#-contributing)
+- [FAQ](#-faq)
+
+---
+
+## ✨ Features
+
+🎥 **Camera Integration**
+- Multi-camera support with device auto-detection
+- Configurable resolution and frame rates
+- Frame capture with timestamp synchronization
+- Automatic resource cleanup
+
+📊 **Arduino Sensor Support**
+- Auto-detection of Arduino ports
+- Real-time sensor data streaming
+- Support for multiple sensor types (temperature, humidity, distance, etc.)
+- Robust error handling and reconnection logic
+- Customizable baud rates and data formats
+
+🎮 **Real-Time UI**
+- Live camera feed visualization
+- Sensor data dashboard with graphs
+- Session management interface
+- Keyboard shortcuts for quick actions
+- Customizable color schemes
+
+💾 **Data Persistence**
+- Organized, structured file system
+- Synchronized image + metadata + labels
+- JSON-based metadata storage
+- Session summaries and statistics
+- Timestamp-based file naming
+
+🔧 **Modular Architecture**
+- Clean separation of concerns
+- Easy to extend and customize
+- Reusable components
+- Unit test ready
+
+---
+
+## 🏗️ Architecture
+
+### Component Overview
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -23,135 +83,414 @@ The application is built with a modular architecture, with each component having
     └─────────┘    └─────────┘ └────────┘  └─────────┘
 ```
 
-## Modules
+### Data Flow
+
+```
+User Input (Space/S/ESC)
+         │
+         ▼
+┌─────────────────────────┐
+│   UI Event Handler      │
+└────────────┬────────────┘
+             │
+    ┌────────┴────────┐
+    │                 │
+    ▼                 ▼
+Capture Frame    Save Summary
+    │                 │
+    ▼                 ▼
+Read Sensors      Generate Report
+    │                 │
+    ▼                 ▼
+Sync Data         Output JSON
+    │                 │
+    ▼                 ▼
+Save Files        Update UI
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1-Minute Setup
+
+```bash
+# Clone and navigate
+git clone https://github.com/yourusername/data-collection-system.git
+cd data-collection-system
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run application
+python main.py
+```
+
+**That's it!** The application will:
+- ✅ Detect and initialize your camera
+- ✅ Auto-connect to Arduino (if available)
+- ✅ Open the Pygame interface
+- ✅ Start collecting data
+
+---
+
+## 📦 Installation
+
+### Prerequisites
+
+- **Python 3.7+**
+- **USB Camera** (built-in or external)
+- **Arduino** (optional, for sensor data)
+- **Pygame** and **OpenCV** (installed via pip)
+
+### Step-by-Step Setup
+
+#### 1. Clone Repository
+```bash
+git clone https://github.com/yourusername/data-collection-system.git
+cd data-collection-system
+```
+
+#### 2. Create Virtual Environment (Recommended)
+```bash
+# On Windows
+python -m venv venv
+venv\Scripts\activate
+
+# On macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+#### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+#### 4. (Optional) Arduino Setup
+
+If using Arduino sensors:
+
+1. **Install Arduino IDE** from [arduino.cc](https://www.arduino.cc/)
+2. **Upload sketch** to your Arduino board
+3. **Note the COM port** (Windows) or device (macOS/Linux)
+4. **Update** `main.py` with correct port if needed:
+   ```python
+   self.arduino = ArduinoSerial(port="COM3", baudrate=9600)  # Windows
+   # or
+   self.arduino = ArduinoSerial(port="/dev/ttyUSB0", baudrate=9600)  # Linux
+   ```
+
+#### 5. Run Application
+```bash
+python main.py
+```
+
+---
+
+## 🎮 Usage
+
+### Basic Operation
+
+1. **Start Application**
+   ```bash
+   python main.py
+   ```
+
+2. **View Live Feed**
+   - Camera stream displays in Pygame window
+   - Sensor data shown in real-time
+
+3. **Capture Data**
+   - Press `SPACE` to capture frame + sensors
+   - Data auto-saves to `datasets/` folder
+
+4. **Save Session**
+   - Press `S` to manually save summary
+   - Or press `ESC` to quit (auto-saves)
+
+### Keyboard Shortcuts
+
+| Key | Action |
+|-----|--------|
+| `SPACE` | Capture frame + sensor data |
+| `S` | Save session summary |
+| `R` | Reset session counter |
+| `D` | Toggle debug mode |
+| `ESC` | Quit application |
+
+### Example Workflow
+
+```bash
+# Start application
+$ python main.py
+
+# Console output:
+# [INFO] Initializing camera...
+# [INFO] Camera initialized at 640x480
+# [INFO] Attempting Arduino connection...
+# [INFO] Arduino connected on COM3
+# [INFO] Pygame UI initialized
+# [INFO] Ready to capture! Press SPACE to start.
+
+# (Application running with live feed)
+
+# Press SPACE to capture
+# [INFO] Captured frame 1 (temperature: 23.5°C, humidity: 45%)
+# [INFO] Saved to datasets/images/20240115_143022_0001_20240115_143025_123.jpg
+
+# ... (repeat captures) ...
+
+# Press S to save summary
+# [INFO] Session summary saved
+# [INFO] Total captures: 42
+# [INFO] Session duration: 15 minutes
+
+# Press ESC to quit
+# [INFO] Shutting down...
+# [INFO] Camera released
+# [INFO] Arduino disconnected
+# [INFO] Goodbye!
+```
+
+---
+
+## 🔧 Modules
 
 ### 1. `camera_manager.py`
-**Purpose**: Manages camera operations
 
-**Key Features**:
-- Camera initialization and configuration
-- Frame capture with error handling
-- Resolution adjustment
-- Automatic resource cleanup
+Manages all camera operations.
 
 **Main Class**: `CameraManager`
 
+**Initialization**:
+```python
+from camera_manager import CameraManager
+
+camera = CameraManager(
+    camera_index=0,      # Camera device ID
+    width=640,           # Frame width
+    height=480           # Frame height
+)
+camera.initialize()
+```
+
 **Key Methods**:
-- `initialize()` - Set up camera connection
-- `capture_frame()` - Capture a single frame
-- `set_resolution(width, height)` - Change camera resolution
-- `release()` - Release camera resources
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `initialize()` | - | `bool` | Set up camera connection |
+| `capture_frame()` | - | `np.ndarray` | Capture single frame |
+| `set_resolution(w, h)` | `width, height` | `bool` | Change resolution |
+| `get_resolution()` | - | `tuple` | Get current resolution |
+| `is_initialized()` | - | `bool` | Check initialization status |
+| `release()` | - | `None` | Release camera resources |
+
+**Example**:
+```python
+camera = CameraManager(width=1280, height=720)
+if camera.initialize():
+    frame = camera.capture_frame()
+    print(f"Frame shape: {frame.shape}")
+    camera.release()
+```
 
 ---
 
 ### 2. `arduino_serial.py`
-**Purpose**: Handles serial communication with Arduino
 
-**Key Features**:
-- Auto-detection of Arduino ports
-- Robust serial communication
-- Sensor data parsing
-- Command sending/receiving
+Handles serial communication with Arduino.
 
 **Main Class**: `ArduinoSerial`
 
-**Key Methods**:
-- `connect()` - Establish serial connection
-- `read_sensor_data()` - Read and parse sensor data
-- `send_command(command)` - Send command to Arduino
-- `disconnect()` - Close connection
+**Initialization**:
+```python
+from arduino_serial import ArduinoSerial
 
-**Data Format**: Expects sensor data in format: `sensor1:value1,sensor2:value2,...`
+arduino = ArduinoSerial(
+    port="COM3",         # Serial port (auto-detect if None)
+    baudrate=9600        # Baud rate
+)
+arduino.connect()
+```
+
+**Key Methods**:
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `connect()` | - | `bool` | Establish connection |
+| `is_connected()` | - | `bool` | Check connection status |
+| `read_sensor_data()` | - | `dict` | Read parsed sensor data |
+| `send_command(cmd)` | `command_str` | `bool` | Send command to Arduino |
+| `disconnect()` | - | `None` | Close connection |
+| `list_ports()` | - | `list` | List available COM ports |
+
+**Data Format**:
+```
+Arduino sends: "sensor1:value1,sensor2:value2,sensor3:value3"
+Parsed to: {"sensor1": value1, "sensor2": value2, "sensor3": value3}
+```
+
+**Example**:
+```python
+arduino = ArduinoSerial(port="COM3")
+if arduino.connect():
+    data = arduino.read_sensor_data()
+    print(f"Temperature: {data.get('temp')}°C")
+    print(f"Humidity: {data.get('humidity')}%")
+```
 
 ---
 
 ### 3. `ui_pygame.py`
-**Purpose**: Provides graphical user interface
 
-**Key Features**:
-- Real-time camera feed display
-- Sensor data visualization
-- Status indicators
-- User input handling
-- Customizable color scheme
+Provides graphical user interface using Pygame.
 
 **Main Class**: `PygameUI`
 
-**Key Methods**:
-- `initialize()` - Set up Pygame window
-- `process_events()` - Handle keyboard/mouse input
-- `draw_frame(frame)` - Display camera feed
-- `draw_sensor_data(data)` - Visualize sensor readings
-- `update()` - Refresh display
+**Initialization**:
+```python
+from ui_pygame import PygameUI
 
-**Controls**:
-- `SPACE` - Capture and save frame
-- `S` - Save session summary
-- `ESC` - Quit application
+ui = PygameUI(
+    width=1024,
+    height=768,
+    title="Data Collection System",
+    fps=30
+)
+ui.initialize()
+```
+
+**Key Methods**:
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `initialize()` | - | `bool` | Set up Pygame window |
+| `process_events()` | - | `dict` | Handle input; returns event data |
+| `draw_frame(frame)` | `np.ndarray` | `None` | Display camera feed |
+| `draw_sensor_data(data)` | `dict` | `None` | Visualize sensor readings |
+| `draw_status(message)` | `message_str` | `None` | Show status message |
+| `update()` | - | `None` | Refresh display |
+| `quit()` | - | `None` | Close window gracefully |
+
+**Example**:
+```python
+ui = PygameUI(width=1024, height=768)
+ui.initialize()
+
+while True:
+    events = ui.process_events()
+    if events.get("quit"):
+        break
+    
+    ui.draw_frame(frame)
+    ui.draw_sensor_data({"temp": 23.5, "humidity": 45})
+    ui.update()
+```
 
 ---
 
 ### 4. `data_logger.py`
-**Purpose**: Manages data persistence
 
-**Key Features**:
-- Organized file storage
-- Session management
-- Synchronized saving (image + metadata + labels)
-- JSON metadata format
-- Session summaries
+Manages data persistence and organization.
 
 **Main Class**: `DataLogger`
 
+**Initialization**:
+```python
+from data_logger import DataLogger
+
+logger = DataLogger(base_path="datasets")
+logger.start_session()
+```
+
 **Key Methods**:
-- `start_session()` - Begin new logging session
-- `save_capture(frame, label_data, sensor_data)` - Save complete capture
-- `save_session_summary()` - Create session summary
-- `get_capture_count()` - Get number of captures
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `start_session()` | - | `str` | Begin new session; returns session_id |
+| `save_capture(frame, label, sensors)` | `np.ndarray, str, dict` | `bool` | Save complete capture |
+| `save_session_summary()` | - | `bool` | Generate session summary JSON |
+| `get_capture_count()` | - | `int` | Get total captures in session |
+| `get_session_id()` | - | `str` | Get current session ID |
+| `get_dataset_path()` | - | `str` | Get datasets folder path |
+
+**Example**:
+```python
+logger = DataLogger(base_path="datasets")
+logger.start_session()
+
+# Later, save a capture
+logger.save_capture(
+    frame=frame_data,
+    label="sample_001",
+    sensors={"temp": 23.5, "humidity": 45}
+)
+
+# Save session summary
+logger.save_session_summary()
+```
 
 ---
 
 ### 5. `main.py`
-**Purpose**: Application entry point and orchestrator
 
-**Key Features**:
-- Module initialization and coordination
-- Main application loop
-- Event handling and routing
-- Graceful shutdown
+Application entry point and orchestrator.
 
 **Main Class**: `DataCollectionApp`
 
+**Initialization**:
+```python
+from main import DataCollectionApp
+
+app = DataCollectionApp()
+app.run()
+```
+
 **Key Methods**:
-- `initialize_modules()` - Set up all components
-- `run()` - Main application loop
-- `shutdown()` - Clean resource cleanup
+
+| Method | Parameters | Returns | Description |
+|--------|-----------|---------|-------------|
+| `initialize_modules()` | - | `bool` | Set up all components |
+| `run()` | - | `None` | Main application loop |
+| `shutdown()` | - | `None` | Clean resource cleanup |
 
 ---
 
-## Dataset Folder Structure
+## 📁 Data Structure
+
+### Folder Organization
 
 ```
 datasets/
-├── images/          # Captured images
-│   ├── {session}_{index}_{timestamp}.jpg
+├── images/              # Captured images
+│   ├── session1_0001_timestamp.jpg
+│   ├── session1_0002_timestamp.jpg
 │   └── ...
-├── labels/          # Label/annotation data (JSON)
-│   ├── {session}_{index}_{timestamp}.json
+│
+├── labels/              # Annotation/label data
+│   ├── session1_0001_timestamp.json
+│   ├── session1_0002_timestamp.json
 │   └── ...
-└── metadata/        # Sensor data and session info (JSON)
-    ├── {session}_{index}_{timestamp}.json
-    ├── session_{session}_summary.json
+│
+└── metadata/            # Sensor data and session info
+    ├── session1_0001_timestamp.json
+    ├── session1_0002_timestamp.json
+    ├── session_session1_summary.json
     └── ...
 ```
 
 ### File Naming Convention
 
-Images and associated data files use synchronized naming:
-- Format: `{session_id}_{capture_number:04d}_{timestamp}.{ext}`
-- Example: `20240115_143022_0001_20240115_143025_123.jpg`
+Format: `{session_id}_{capture_number:04d}_{timestamp}.{ext}`
 
-### Metadata Structure
+Example: `20240115_143022_0001_20240115_143025_123.jpg`
+
+- **session_id**: Date+time of session start (YYYYMMDD_HHMMSS)
+- **capture_number**: 4-digit index (0001, 0002, etc.)
+- **timestamp**: Capture timestamp with milliseconds
+
+### Metadata Structures
 
 **Capture Metadata** (`metadata/{filename}.json`):
 ```json
@@ -159,11 +498,15 @@ Images and associated data files use synchronized naming:
   "timestamp": "20240115_143025_123",
   "session_id": "20240115_143022",
   "capture_number": 1,
+  "image_path": "images/20240115_143022_0001_20240115_143025_123.jpg",
+  "label": "sample_001",
   "sensor_data": {
     "temperature": 23.5,
     "humidity": 45.2,
-    "distance": 150.3
-  }
+    "distance": 150.3,
+    "pressure": 1013.25
+  },
+  "notes": "Optional notes about this capture"
 }
 ```
 
@@ -171,86 +514,261 @@ Images and associated data files use synchronized naming:
 ```json
 {
   "session_id": "20240115_143022",
-  "total_captures": 42,
   "start_time": "20240115_143022",
   "end_time": "20240115_144530_456",
-  "images_path": "datasets/images",
-  "labels_path": "datasets/labels",
-  "metadata_path": "datasets/metadata"
+  "duration_minutes": 15,
+  "total_captures": 42,
+  "sensor_stats": {
+    "temperature": {
+      "min": 22.1,
+      "max": 24.8,
+      "avg": 23.5
+    },
+    "humidity": {
+      "min": 40.2,
+      "max": 50.5,
+      "avg": 45.2
+    }
+  },
+  "image_count": 42,
+  "images_path": "images",
+  "labels_path": "labels",
+  "metadata_path": "metadata",
+  "notes": "Optional session notes"
 }
 ```
 
-## Installation
+---
 
-1. Install Python dependencies:
-```bash
-pip install -r requirements.txt
-```
+## ⚙️ Configuration
 
-2. Ensure camera is connected (USB or built-in)
+### Basic Configuration
 
-3. (Optional) Connect Arduino via USB for sensor data
-
-## Usage
-
-Run the application:
-```bash
-python main.py
-```
-
-The application will:
-1. Initialize camera and attempt to connect to Arduino
-2. Open a Pygame window showing the camera feed
-3. Display sensor data (if Arduino connected)
-4. Wait for user input to capture frames
-
-### Capturing Data
-
-1. Press `SPACE` to capture the current frame along with sensor data
-2. Data is automatically saved to the `datasets/` folder
-3. Press `S` to manually save a session summary
-4. Press `ESC` to quit (automatically saves summary)
-
-## Configuration
-
-To customize settings, modify the initialization parameters in `main.py`:
+Edit `main.py` to customize settings:
 
 ```python
 # Camera settings
-self.camera = CameraManager(camera_index=0, width=640, height=480)
+CAMERA_INDEX = 0           # Device ID (0 = default)
+CAMERA_WIDTH = 640         # Frame width in pixels
+CAMERA_HEIGHT = 480        # Frame height in pixels
+CAMERA_FPS = 30            # Frames per second
 
 # Arduino settings
-self.arduino = ArduinoSerial(baudrate=9600)
+ARDUINO_PORT = None        # None = auto-detect
+ARDUINO_BAUDRATE = 9600    # Serial baud rate
+ARDUINO_TIMEOUT = 1        # Read timeout in seconds
 
 # UI settings
-self.ui = PygameUI(width=1024, height=768, title="Data Collection System")
+UI_WIDTH = 1024            # Window width
+UI_HEIGHT = 768            # Window height
+UI_FPS = 30                # Display refresh rate
 
-# Data logger settings
-self.logger = DataLogger(base_path="datasets")
+# Data settings
+DATASET_PATH = "datasets"  # Base folder for data storage
+AUTO_SAVE_INTERVAL = 60    # Auto-save summary every N seconds
 ```
 
-## Extending the System
+### Advanced Configuration
 
-### Adding New Sensor Types
+Create `config.json` for persistent settings:
 
-Edit `arduino_serial.py` to handle new data formats in the `read_sensor_data()` method.
+```json
+{
+  "camera": {
+    "index": 0,
+    "width": 1280,
+    "height": 720,
+    "fps": 30
+  },
+  "arduino": {
+    "port": "COM3",
+    "baudrate": 115200,
+    "timeout": 2
+  },
+  "ui": {
+    "width": 1280,
+    "height": 960,
+    "theme": "dark"
+  },
+  "data": {
+    "path": "datasets",
+    "auto_save": true,
+    "auto_save_interval": 60
+  }
+}
+```
 
-### Custom UI Elements
+Load in `main.py`:
+```python
+import json
 
-Modify `ui_pygame.py` to add new visualization components using the provided drawing methods.
+with open("config.json", "r") as f:
+    config = json.load(f)
+```
 
-### Additional Data Processing
+---
 
-Extend `data_logger.py` to add preprocessing, validation, or additional export formats.
+## 🐛 Troubleshooting
 
-## Requirements
+### Camera Issues
 
-- Python 3.7+
-- OpenCV (cv2)
-- Pygame
-- PySerial
-- NumPy
+**Problem**: "Camera not found" error
 
-## License
+**Solution**:
+```python
+# Test camera detection
+import cv2
 
-This project is open source and available for modification and distribution.
+# List available cameras
+for i in range(5):
+    cap = cv2.VideoCapture(i)
+    if cap.isOpened():
+        print(f"Camera {i} available")
+        cap.release()
+```
+
+**Problem**: "Cannot grab frame" error
+
+**Solution**:
+```bash
+# Restart camera driver
+# Windows: Restart camera service
+# Linux: Try different camera index (start from 1)
+# macOS: Restart application or restart Mac
+```
+
+---
+
+### Arduino Issues
+
+**Problem**: "Arduino port not found"
+
+**Solution**:
+```python
+from arduino_serial import ArduinoSerial
+
+# List available ports
+ports = ArduinoSerial.list_ports()
+print("Available ports:", ports)
+
+# Connect with specific port
+arduino = ArduinoSerial(port=ports[0])
+```
+
+**Problem**: "Data parsing error" 
+
+**Solution**:
+Check Arduino sends correct format:
+```
+Expected: "sensor1:23.5,sensor2:45.2"
+NOT: "23.5,45.2" or "sensor1=23.5"
+```
+
+---
+
+### UI Issues
+
+**Problem**: Pygame window not opening
+
+**Solution**:
+```bash
+# Reinstall Pygame
+pip uninstall pygame
+pip install pygame --upgrade
+
+# On Windows, may need: pip install pygame-ce
+```
+
+**Problem**: Display freezes during capture
+
+**Solution**:
+- Run in separate thread (example in `main.py`)
+- Reduce image resolution
+- Lower camera FPS
+
+---
+
+### Data Issues
+
+**Problem**: Files not saving to `datasets/`
+
+**Solution**:
+```python
+# Check permissions
+import os
+os.makedirs("datasets/images", exist_ok=True)
+os.makedirs("datasets/labels", exist_ok=True)
+os.makedirs("datasets/metadata", exist_ok=True)
+
+# Verify write access
+with open("datasets/test.txt", "w") as f:
+    f.write("test")
+```
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Here's how to help:
+
+### 1. Fork the Repository
+```bash
+git clone https://github.com/yourusername/data-collection-system.git
+```
+
+### 2. Create Feature Branch
+```bash
+git checkout -b feature/your-feature-name
+```
+
+### 3. Make Changes & Test
+```bash
+python -m pytest tests/
+```
+
+### 4. Commit & Push
+```bash
+git commit -m "Add: description of changes"
+git push origin feature/your-feature-name
+```
+
+### 5. Open Pull Request
+
+---
+
+## ❓ FAQ
+
+**Q: Can I use multiple cameras?**
+A: Yes! Modify `camera_manager.py` to support array of cameras.
+
+**Q: How do I add more sensor types?**
+A: Edit `arduino_serial.py` `read_sensor_data()` method to parse new formats.
+
+**Q: Can I export data in different formats?**
+A: Yes! Extend `data_logger.py` with methods for CSV, XML, etc.
+
+**Q: What's the maximum capture rate?**
+A: Depends on camera and system; typically 30-120 fps.
+
+**Q: Can I use this on Raspberry Pi?**
+A: Yes! Requires: `pip install opencv-python-headless pygame pyserial`
+
+**Q: Is data automatically backed up?**
+A: No, but you can add cloud sync to `data_logger.py`.
+
+---
+
+## 📄 License
+
+MIT License - Feel free to use, modify, and distribute.
+
+---
+
+## 📞 Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/data-collection-system/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/yourusername/data-collection-system/discussions)
+
+---
+
+**Made with ❤️ for data collectors and IoT enthusiasts**
